@@ -26,6 +26,14 @@ images: {
     },
   ],
 },
+  // 로컬 실행용: 프론트가 `${origin}/ws`로 접속하는 WebSocket(SockJS) 요청을 백엔드로 전달한다.
+  // 배포 환경에서는 리버스 프록시(Caddy)가 /ws를 처리하므로, LOCAL_WS_PROXY=true 일 때만 활성화한다.
+  async rewrites() {
+    if (process.env.LOCAL_WS_PROXY !== 'true') return [];
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '');
+    if (!apiBase) return [];
+    return [{ source: '/ws/:path*', destination: `${apiBase}/ws/:path*` }];
+  },
   /* config options here */
   output: 'standalone'
 };
