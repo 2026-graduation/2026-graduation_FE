@@ -7,6 +7,21 @@ const withBundleAnalyzer = bundleAnalyzer({
   openAnalyzer: true, // 빌드 완료 시 자동으로 브라우저 탭 열기
 });
 
+// 백엔드(로컬 파일 저장소) 주소에서 내려오는 이미지를 허용한다.
+const localImagePatterns = (() => {
+  try {
+    const u = new URL(process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080");
+    return [{
+      protocol: u.protocol.replace(":", "") as "http" | "https",
+      hostname: u.hostname,
+      ...(u.port ? { port: u.port } : {}),
+      pathname: "/api/files/local/**",
+    }];
+  } catch {
+    return [];
+  }
+})();
+
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_PORTONE_STORE_ID: process.env.VITE_PORTONE_STORE_ID,
@@ -18,12 +33,15 @@ const nextConfig: NextConfig = {
     },
   },
 images: {
+  // 로컬 저장소(백엔드 storage.type=local) 사용 시 next/image 가 localhost 이미지를 가져올 수 있도록 허용
+  dangerouslyAllowLocalIP: true,
   remotePatterns: [
     {
       protocol: "https",
       hostname: "gymjjak-prod.s3.ap-northeast-2.amazonaws.com",
       pathname: "/uploads/**",
     },
+    ...localImagePatterns,
   ],
 },
   // 로컬 실행용: 프론트가 `${origin}/ws`로 접속하는 WebSocket(SockJS) 요청을 백엔드로 전달한다.
